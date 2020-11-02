@@ -96,7 +96,7 @@
   (dolist (pxentry (append (alist-get 'latestCandles apiresult) nil))
     (let ((sym (intern (alist-get 'instrument pxentry)))
 	  (period (intern (alist-get 'granularity pxentry)))
-	  (price (string-to-number (alist-get 'o (alist-get 'mid (aref (reverse (alist-get 'candles pxentry)) 0))))))
+	  (price (string-to-number (alist-get 'c (alist-get 'mid (aref (alist-get 'candles pxentry) 0))))))
       (put sym period price))))
 
 (defun pctformat (pct)
