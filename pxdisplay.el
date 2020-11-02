@@ -184,7 +184,9 @@
 (progn
   (setq pxdisplay-mode-map (make-sparse-keymap))
   (define-key pxdisplay-mode-map (kbd "r") 'pxdisplay-refresh)
-  (define-key pxdisplay-mode-map (kbd "R") 'pxdisplay-refresh))
+  (define-key pxdisplay-mode-map (kbd "R") 'pxdisplay-refresh)
+  (define-key pxdisplay-mode-map (kbd "q") 'bury-buffer)
+  (define-key pxdisplay-mode-map (kbd "Q") 'bury-buffer))
 
 (define-derived-mode pxdisplay-mode text-mode "Price Display"
   "Major mode for displaying prices"
