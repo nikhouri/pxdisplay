@@ -21,7 +21,7 @@
     (setq pxdisplay-host "api-fxpractice.oanda.com")) ; Demo
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; API update & dispaly refresh code
+;; API update & display refresh code
 
 ;; OANDA API call
 (defun OANDA-REST (host account endpoint token params successfun)

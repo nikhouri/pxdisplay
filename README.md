@@ -10,4 +10,4 @@ Draft Emacs major mode for fetching/displaying financial prices.
 * Creates (and updates) buffer `*pxdisplay*`
 * Refresh in the `*pxdisplay*` buffer by pressing `r`
 
-API reference: ()[http://developer.oanda.com/rest-live-v20/introduction/]
+API reference: http://developer.oanda.com/rest-live-v20/introduction/
