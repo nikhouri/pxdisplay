@@ -172,7 +172,7 @@
 	("▼" . ''pxdisplay-down)
 	("(....-..-..T..:..:..Z)" . ''font-lock-comment-face)))
 
-(defun pxdisplay-refresh ()
+(defun pxdisplay ()
   "Refresh the pxdisplay"
   (interactive)
   (message "pxdisplay-mode: updating prices")
@@ -193,3 +193,4 @@
   (use-local-map pxdisplay-mode-map))
 
 (provide 'pxdisplay-mode)
+(provide 'pxdisplay)
