@@ -46,7 +46,7 @@
 	       (histlist ""))
 	   (dolist (cat pxdisplay-sym)
 	     (dolist (sym (cadr cat))
-	       (setplist sym nil)
+	       (setplist (intern (concat "pxdisplay-pxdb-" (symbol-name sym))) nil)
 	       (setq symlist (concat symlist "," (symbol-name sym)))
 	       (setq histlist (concat histlist "," (concat (symbol-name sym) ":D:M")
 				      "," (concat (symbol-name sym) ":W:M")
@@ -81,7 +81,7 @@
 (defun pxdisplay-process-current (apiresult)
   "Extract current prices when REST API call returns & update symbol properties"
   (dolist (pxentry (append (alist-get 'prices apiresult) nil))
-    (let ((sym (intern (alist-get 'instrument pxentry)))
+    (let ((sym (intern (concat "pxdisplay-pxdb-" (alist-get 'instrument pxentry))))
       (bid (string-to-number (alist-get 'price (aref (alist-get 'bids pxentry) 0))))
       (ask (string-to-number (alist-get 'price (aref (alist-get 'asks pxentry) 0))))
       (ts (alist-get 'time pxentry)))
@@ -91,7 +91,7 @@
 (defun pxdisplay-process-historic (apiresult)
   "Extract historic prices when REST API call returns & update symbol properties"
   (dolist (pxentry (append (alist-get 'latestCandles apiresult) nil))
-    (let ((sym (intern (alist-get 'instrument pxentry)))
+    (let ((sym (intern (concat "pxdisplay-pxdb-" (alist-get 'instrument pxentry))))
 	  (period (intern (alist-get 'granularity pxentry)))
 	  (price (string-to-number (alist-get 'c (alist-get 'mid (aref (alist-get 'candles pxentry) 0))))))
       (put sym period price))))
@@ -107,6 +107,7 @@
     "       ")) ; We weren't passed a number
 
 (defun pxdisplay-update-pxdisplay ()
+  "Write out prices to a (new) *pxdisplay* buffer"
   (setq pxbuff (get-buffer-create "*pxdisplay*"))
   (with-current-buffer "*pxdisplay*"
     (setq inhibit-read-only t)
@@ -121,11 +122,12 @@
       (princ " \n" pxbuff)
       (if cat
 	  (dolist (sym (cadr cat))
-	    (let ((price (get sym 'price))
-		  (d (get sym 'D))
-		  (w (get sym 'W))
-		  (m (get sym 'M))
-		  (ts (get sym 'ts)))
+	    (let* ((fsym (intern (concat "pxdisplay-pxdb-" (symbol-name sym))))
+		   (price (get fsym 'price))
+		   (d (get fsym 'D))
+		   (w (get fsym 'W))
+		   (m (get fsym 'M))
+		   (ts (get fsym 'ts)))
 	      (princ (format "%-10s" sym) pxbuff)
 	      (princ (format "%11.4f" price) pxbuff)
 	      (princ (concat "  D:" (pxdisplay-pctformat (/ (- d price) d))) pxbuff)
