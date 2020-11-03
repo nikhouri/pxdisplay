@@ -6,7 +6,7 @@
 (defvar pxdisplay-host nil)
 (defvar pxdisplay-account nil)
 (defvar pxdisplay-token nil)
-(if (not pxdisplay-sym)
+(if (not pxdisplay-sym) ; Default symlist if not already user-defined
     (setq pxdisplay-sym
 	  '((Forex_Major (EUR_USD USD_JPY GBP_USD USD_CHF USD_CAD AUD_USD NZD_USD))
 	    (Forex_Other (EUR_NOK EUR_SEK USD_CNH USD_TRY USD_ZAR USD_MXN))
@@ -15,15 +15,15 @@
 	    (Commodities (XAU_USD XAG_USD XPT_USD XCU_USD BCO_USD NATGAS_USD
 				  WHEAT_USD CORN_USD SOYBN_USD SUGAR_USD))
 	    (Cryptocurrency (BTC_USD)))))
-;; (setq pxdisplay-host "api-fxtrade.oanda.com") ; Live
-(if (not pxdisplay-host)
+(if (not pxdisplay-host) ; Default host
+    ;;(setq pxdisplay-host "api-fxtrade.oanda.com") ; Live
     (setq pxdisplay-host "api-fxpractice.oanda.com")) ; Demo
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; API update & display refresh code
 
-;; OANDA API call
-(defun OANDA-REST (host account endpoint token params successfun)
+(defun pxdisplay-OANDA-REST (host account endpoint token params successfun)
+  "OANDA REST API call"
   (request
     (concat "https://" host "/v3/accounts/" account endpoint)
     :type "GET"
@@ -36,8 +36,8 @@
 	    (lambda (&key error-thrown &allow-other-keys&rest_)
 	      (message "Error fetching rates: %S" error-thrown)))))
 
-(defun update-prices (step)
-  "Main function"
+(defun pxdisplay-update-prices (step)
+  "Main update function"
   (cond ((= step 1)
 	 ;; Validate config in pxdisplay-* variables)
 	 
@@ -53,34 +53,32 @@
 				      "," (concat (symbol-name sym) ":M:M")))))
 	   (put 'pxdisplay-sym 'symlist (substring symlist 1))
 	   (put 'pxdisplay-sym 'histlist (substring histlist 1)))
-	   ;; Fetch & process current prices
-	 (OANDA-REST pxdisplay-host pxdisplay-acct "/pricing" pxdisplay-token
+	 ;; Fetch & process current prices
+	 (pxdisplay-OANDA-REST pxdisplay-host pxdisplay-acct "/pricing" pxdisplay-token
 		     `(("instruments" .
 			,(get 'pxdisplay-sym 'symlist)))
 		     (cl-function
 		      (lambda (&key data &allow-other-keys)
-			(process-current data)
-	                (update-prices 2)))))
+			(pxdisplay-process-current data)
+	                (pxdisplay-update-prices 2)))))
 	((= step 2)
 	 ;; Fetch & process historic prices
-	 (OANDA-REST pxdisplay-host pxdisplay-acct "/candles/latest" pxdisplay-token
+	 (pxdisplay-OANDA-REST pxdisplay-host pxdisplay-acct "/candles/latest" pxdisplay-token
 		     `(("candleSpecifications" .
 			,(get 'pxdisplay-sym 'histlist)))
 		     (cl-function
 		      (lambda (&key data &allow-other-keys)
-			(process-historic data)
-			(update-prices 3)))))
+			(pxdisplay-process-historic data)
+			(pxdisplay-update-prices 3)))))
 	((= step 3)
 	 ;; Update price display buffer
-	 (update-pxdisplay))))
+	 (pxdisplay-update-pxdisplay))))
 
-(defun sp (x) (print x (get-buffer "*scratch*")))
-
-(defun validate-setup ()
+(defun pxdisplay-validate-setup ()
   "Validate config is well-formed, or fallback to defaults, or err out"
   t)
 
-(defun process-current (apiresult)
+(defun pxdisplay-process-current (apiresult)
   "Extract current prices when REST API call returns & update symbol properties"
   (dolist (pxentry (append (alist-get 'prices apiresult) nil))
     (let ((sym (intern (alist-get 'instrument pxentry)))
@@ -90,7 +88,7 @@
     (put sym 'price (/ (+ bid ask) 2))
     (put sym 'ts ts))))
 
-(defun process-historic (apiresult)
+(defun pxdisplay-process-historic (apiresult)
   "Extract historic prices when REST API call returns & update symbol properties"
   (dolist (pxentry (append (alist-get 'latestCandles apiresult) nil))
     (let ((sym (intern (alist-get 'instrument pxentry)))
@@ -98,7 +96,7 @@
 	  (price (string-to-number (alist-get 'c (alist-get 'mid (aref (alist-get 'candles pxentry) 0))))))
       (put sym period price))))
 
-(defun pctformat (pct)
+(defun pxdisplay-pctformat (pct)
   "Formatting pxdisplay arrowed percents"
   (if (or (floatp pct) (integerp pct))
       (cond
@@ -108,7 +106,7 @@
        "       ") ; Some other thing happened
     "       ")) ; We weren't passed a number
 
-(defun update-pxdisplay ()
+(defun pxdisplay-update-pxdisplay ()
   (setq pxbuff (get-buffer-create "*pxdisplay*"))
   (with-current-buffer "*pxdisplay*"
     (setq inhibit-read-only t)
@@ -130,9 +128,9 @@
 		  (ts (get sym 'ts)))
 	      (princ (format "%-10s" sym) pxbuff)
 	      (princ (format "%11.4f" price) pxbuff)
-	      (princ (concat "  D:" (pctformat (/ (- d price) d))) pxbuff)
-	      (princ (concat "  W:" (pctformat (/ (- w price) w))) pxbuff)
-	      (princ (concat "  M:" (pctformat (/ (- m price) m))) pxbuff)
+	      (princ (concat "  D:" (pxdisplay-pctformat (/ (- d price) d))) pxbuff)
+	      (princ (concat "  W:" (pxdisplay-pctformat (/ (- w price) w))) pxbuff)
+	      (princ (concat "  M:" (pxdisplay-pctformat (/ (- m price) m))) pxbuff)
 	      (princ (concat "  (" (substring ts 0 19) "Z)") pxbuff)
 	      (princ "\n" pxbuff)))))
     (read-only-mode)
@@ -176,7 +174,7 @@
   "Refresh the pxdisplay"
   (interactive)
   (message "pxdisplay-mode: updating prices")
-  (update-prices 1))
+  (pxdisplay-update-prices 1))
 
 (defvar pxdisplay-mode-map nil "Keymap for 'pxdisplay-mode'")
 
