@@ -11,7 +11,7 @@
 	  '((Forex_Major (EUR_USD USD_JPY GBP_USD USD_CHF USD_CAD AUD_USD NZD_USD))
 	    (Forex_Other (EUR_NOK EUR_SEK USD_CNH USD_TRY USD_ZAR USD_MXN))
 	    (Indices (US30_USD SPX500_USD UK100_GBP JP225_USD EU50_EUR DE30_EUR
-				TWIX_USD HK33_HKD CN50_USD IN50_USD))
+			       TWIX_USD HK33_HKD CN50_USD IN50_USD))
 	    (Commodities (XAU_USD XAG_USD XPT_USD XCU_USD BCO_USD NATGAS_USD
 				  WHEAT_USD CORN_USD SOYBN_USD SUGAR_USD))
 	    (Cryptocurrency (BTC_USD)))))
@@ -55,21 +55,21 @@
 	   (put 'pxdisplay-sym 'histlist (substring histlist 1)))
 	 ;; Fetch & process current prices
 	 (pxdisplay-OANDA-REST pxdisplay-host pxdisplay-acct "/pricing" pxdisplay-token
-		     `(("instruments" .
-			,(get 'pxdisplay-sym 'symlist)))
-		     (cl-function
-		      (lambda (&key data &allow-other-keys)
-			(pxdisplay-process-current data)
-	                (pxdisplay-update-prices 2)))))
+			       `(("instruments" .
+				  ,(get 'pxdisplay-sym 'symlist)))
+			       (cl-function
+				(lambda (&key data &allow-other-keys)
+				  (pxdisplay-process-current data)
+				  (pxdisplay-update-prices 2)))))
 	((= step 2)
 	 ;; Fetch & process historic prices
 	 (pxdisplay-OANDA-REST pxdisplay-host pxdisplay-acct "/candles/latest" pxdisplay-token
-		     `(("candleSpecifications" .
-			,(get 'pxdisplay-sym 'histlist)))
-		     (cl-function
-		      (lambda (&key data &allow-other-keys)
-			(pxdisplay-process-historic data)
-			(pxdisplay-update-prices 3)))))
+			       `(("candleSpecifications" .
+				  ,(get 'pxdisplay-sym 'histlist)))
+			       (cl-function
+				(lambda (&key data &allow-other-keys)
+				  (pxdisplay-process-historic data)
+				  (pxdisplay-update-prices 3)))))
 	((= step 3)
 	 ;; Update price display buffer
 	 (pxdisplay-update-pxdisplay))))
@@ -82,11 +82,11 @@
   "Extract current prices when REST API call returns & update symbol properties"
   (dolist (pxentry (append (alist-get 'prices apiresult) nil))
     (let ((sym (intern (concat "pxdisplay-pxdb-" (alist-get 'instrument pxentry))))
-      (bid (string-to-number (alist-get 'price (aref (alist-get 'bids pxentry) 0))))
-      (ask (string-to-number (alist-get 'price (aref (alist-get 'asks pxentry) 0))))
-      (ts (alist-get 'time pxentry)))
-    (put sym 'price (/ (+ bid ask) 2))
-    (put sym 'ts ts))))
+	  (bid (string-to-number (alist-get 'price (aref (alist-get 'bids pxentry) 0))))
+	  (ask (string-to-number (alist-get 'price (aref (alist-get 'asks pxentry) 0))))
+	  (ts (alist-get 'time pxentry)))
+      (put sym 'price (/ (+ bid ask) 2))
+      (put sym 'ts ts))))
 
 (defun pxdisplay-process-historic (apiresult)
   "Extract historic prices when REST API call returns & update symbol properties"
@@ -138,7 +138,7 @@
     (read-only-mode)
     (goto-char cpos)
     (setq inhibit-read-only nil))
-    (switch-to-buffer (get-buffer "*pxdisplay*")))
+  (switch-to-buffer (get-buffer "*pxdisplay*")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Major mode code
