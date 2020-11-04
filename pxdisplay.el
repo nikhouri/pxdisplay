@@ -54,6 +54,7 @@
 	   (put 'pxdisplay-sym 'symlist (substring symlist 1))
 	   (put 'pxdisplay-sym 'histlist (substring histlist 1)))
 	 ;; Fetch & process current prices
+	 (message "pxdisplay-mode: updating prices...")
 	 (pxdisplay-OANDA-REST pxdisplay-host pxdisplay-acct "/pricing" pxdisplay-token
 			       `(("instruments" .
 				  ,(get 'pxdisplay-sym 'symlist)))
@@ -72,6 +73,7 @@
 				  (pxdisplay-update-prices 3)))))
 	((= step 3)
 	 ;; Update price display buffer
+	 (message "pxdisplay-mode: updating prices...done")
 	 (pxdisplay-update-pxdisplay))))
 
 (defun pxdisplay-validate-setup ()
@@ -175,7 +177,6 @@
 (defun pxdisplay ()
   "Refresh the pxdisplay"
   (interactive)
-  (message "pxdisplay-mode: updating prices")
   (pxdisplay-update-prices 1))
 
 (defvar pxdisplay-mode-map nil "Keymap for 'pxdisplay-mode'")
