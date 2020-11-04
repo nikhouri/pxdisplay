@@ -40,19 +40,8 @@
   "Main update function"
   (cond ((= step 1)
 	 ;; Validate config in pxdisplay-* variables)
-	 
-	 ;; Initialize plists for all symbols, build symlist
-	 (let ((symlist "")
-	       (histlist ""))
-	   (dolist (cat pxdisplay-sym)
-	     (dolist (sym (cadr cat))
-	       (setplist (intern (concat "pxdisplay-pxdb-" (symbol-name sym))) nil)
-	       (setq symlist (concat symlist "," (symbol-name sym)))
-	       (setq histlist (concat histlist "," (concat (symbol-name sym) ":D:M")
-				      "," (concat (symbol-name sym) ":W:M")
-				      "," (concat (symbol-name sym) ":M:M")))))
-	   (put 'pxdisplay-sym 'symlist (substring symlist 1))
-	   (put 'pxdisplay-sym 'histlist (substring histlist 1)))
+
+	 (pxdisplay-initialize)
 	 ;; Fetch & process current prices
 	 (message "pxdisplay-mode: updating prices...")
 	 (pxdisplay-OANDA-REST pxdisplay-host pxdisplay-acct "/pricing" pxdisplay-token
@@ -75,6 +64,20 @@
 	 ;; Update price display buffer
 	 (message "pxdisplay-mode: updating prices...done")
 	 (pxdisplay-update-pxdisplay))))
+
+(defun pxdisplay-initialize ()
+  "Initialize plists for all symbols, build symlist"
+  (let ((symlist "")
+	(histlist ""))
+    (dolist (cat pxdisplay-sym)
+      (dolist (sym (cadr cat))
+	(setplist (intern (concat "pxdisplay-pxdb-" (symbol-name sym))) nil)
+	(setq symlist (concat symlist "," (symbol-name sym)))
+	(setq histlist (concat histlist "," (concat (symbol-name sym) ":D:M")
+			       "," (concat (symbol-name sym) ":W:M")
+			       "," (concat (symbol-name sym) ":M:M")))))
+    (put 'pxdisplay-sym 'symlist (substring symlist 1))
+    (put 'pxdisplay-sym 'histlist (substring histlist 1))))
 
 (defun pxdisplay-validate-setup ()
   "Validate config is well-formed, or fallback to defaults, or err out"
