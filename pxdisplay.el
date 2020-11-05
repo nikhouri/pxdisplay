@@ -30,10 +30,7 @@
     :params params
     :parser 'json-read
     :timeout 5
-    :success successfun
-    :error (cl-function
-	    (lambda (&key error-thrown &allow-other-keys&rest_)
-	      (message "Error fetching rates: %S" error-thrown)))))
+    :success successfun))
 
 (defun pxdisplay-update-prices (step)
   "Main update function"
