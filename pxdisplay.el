@@ -200,12 +200,12 @@
 
 (defvar pxdisplay-highlights nil "First element for 'font-lock-defaults'")
 (setq pxdisplay-highlights
-      '(("^#.*" . ''pxdisplay-cat)
-	("^\\([^ ]*\\) " . (1 ''pxdisplay-sym))
-	(" \\(.\\):" . (1 ''bold)) ; Time period
-	("▲" . ''pxdisplay-up)
-	("▼" . ''pxdisplay-down)
-	("(....-..-..T..:..:..Z)" . ''font-lock-comment-face)))
+      '(("^#.*" . 'pxdisplay-cat)
+	("^\\([^ ]*\\) " . (1 'pxdisplay-sym))
+	(" \\(.\\):" . (1 'bold)) ; Time period
+	("▲" . 'pxdisplay-up)
+	("▼" . 'pxdisplay-down)
+	("(....-..-..T..:..:..Z)" . 'font-lock-comment-face)))
 
 (defun pxdisplay ()
   "Refresh the pxdisplay"
