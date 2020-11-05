@@ -6,18 +6,17 @@
 (defvar pxdisplay-host nil)
 (defvar pxdisplay-account nil)
 (defvar pxdisplay-token nil)
-(if (not pxdisplay-sym) ; Default symlist if not already user-defined
-    (setq pxdisplay-sym
-	  '((Forex_Major (EUR_USD USD_JPY GBP_USD USD_CHF USD_CAD AUD_USD NZD_USD))
-	    (Forex_Other (EUR_NOK EUR_SEK USD_CNH USD_TRY USD_ZAR USD_MXN))
-	    (Indices (US30_USD SPX500_USD UK100_GBP JP225_USD EU50_EUR DE30_EUR
-			       TWIX_USD HK33_HKD CN50_USD IN50_USD))
-	    (Commodities (XAU_USD XAG_USD XPT_USD XCU_USD BCO_USD NATGAS_USD
-				  WHEAT_USD CORN_USD SOYBN_USD SUGAR_USD))
-	    (Cryptocurrency (BTC_USD)))))
-(if (not pxdisplay-host) ; Default host
-    ;;(setq pxdisplay-host "api-fxtrade.oanda.com") ; Live
-    (setq pxdisplay-host "api-fxpractice.oanda.com")) ; Demo
+(setq pxdisplay-sym-default ; Default symlist if not already user-defined
+      '((Forex_Major (EUR_USD USD_JPY GBP_USD USD_CHF USD_CAD AUD_USD NZD_USD))
+	(Forex_Other (EUR_NOK EUR_SEK USD_CNH USD_TRY USD_ZAR USD_MXN))
+	(Indices (US30_USD SPX500_USD UK100_GBP JP225_USD EU50_EUR DE30_EUR
+			   TWIX_USD HK33_HKD CN50_USD IN50_USD))
+	(Commodities (XAU_USD XAG_USD XPT_USD XCU_USD BCO_USD NATGAS_USD
+			      WHEAT_USD CORN_USD SOYBN_USD SUGAR_USD))
+	(Cryptocurrency (BTC_USD))))
+(setq pxdisplay-host-default ; Default host
+    ;;"api-fxtrade.oanda.com" ; Live
+      "api-fxpractice.oanda.com") ; Demo
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; API update & display refresh code
@@ -39,21 +38,26 @@
 (defun pxdisplay-update-prices (step)
   "Main update function"
   (cond ((= step 1)
-	 ;; Validate config in pxdisplay-* variables)
-
-	 (pxdisplay-initialize)
-	 ;; Fetch & process current prices
-	 (message "pxdisplay-mode: updating prices...")
-	 (pxdisplay-OANDA-REST pxdisplay-host pxdisplay-acct "/pricing" pxdisplay-token
-			       `(("instruments" .
-				  ,(get 'pxdisplay-sym 'symlist)))
-			       (cl-function
-				(lambda (&key data &allow-other-keys)
-				  (pxdisplay-process-current data)
-				  (pxdisplay-update-prices 2)))))
+	 (when (pxdisplay-validate-setup)
+	   (pxdisplay-initialize)
+	   ;; Fetch & process current prices
+	   (message "pxdisplay-mode: updating prices...")
+	   (pxdisplay-OANDA-REST pxdisplay-host
+				 pxdisplay-account
+				 "/pricing"
+				 pxdisplay-token
+				 `(("instruments" .
+				    ,(get 'pxdisplay-sym 'symlist)))
+				 (cl-function
+				  (lambda (&key data &allow-other-keys)
+				    (pxdisplay-process-current data)
+				    (pxdisplay-update-prices 2))))))
 	((= step 2)
 	 ;; Fetch & process historic prices
-	 (pxdisplay-OANDA-REST pxdisplay-host pxdisplay-acct "/candles/latest" pxdisplay-token
+	 (pxdisplay-OANDA-REST pxdisplay-host
+			       pxdisplay-account
+			       "/candles/latest"
+			       pxdisplay-token
 			       `(("candleSpecifications" .
 				  ,(get 'pxdisplay-sym 'histlist)))
 			       (cl-function
@@ -67,6 +71,10 @@
 
 (defun pxdisplay-initialize ()
   "Initialize plists for all symbols, build symlist"
+  (if (equal pxdisplay-sym nil) ; Use defaults if not defined
+      (setq pxdisplay-sym pxdisplay-sym-default))
+  (if (equal pxdisplay-host nil) ; Use defaults if not defined
+	(setq pxdisplay-host pxdisplay-host-default))
   (let ((symlist "")
 	(histlist ""))
     (dolist (cat pxdisplay-sym)
@@ -80,8 +88,33 @@
     (put 'pxdisplay-sym 'histlist (substring histlist 1))))
 
 (defun pxdisplay-validate-setup ()
-  "Validate config is well-formed, or fallback to defaults, or err out"
-  t)
+  "Validate config in pxdisplay-* variables"
+  (and (cond ((equal pxdisplay-account nil) ; Check if mandatory variables are defined
+	      (message "pxdisplay-mode: you must set an account in pxdisplay-account")
+	      nil)
+	     ((equal pxdisplay-token nil)
+	      (message "pxdisplay-mode: you must set a token in pxdisplay-token")
+	      nil)
+	     (t t))
+       (let ((wellf t))  ; Check if pxdisplay-sym is valid
+	 (if (listp pxdisplay-sym) ; Setting must be list of lists
+	     (dolist (row pxdisplay-sym)
+	       (if (listp row) ; Setting set must be list of lists
+		   (if (atom (car row)) ; First item must be a category label
+		       (if (and (listp (cadr row)) (not (equal nil (cadr row))))
+					; Second item should be a list...
+			   (if (member nil (mapcar 'atom (cadr row))) ; ... of atoms
+			       (setq wellf 'symlistcheck))
+			 (setq wellf 'symlistcheck))
+		     (setq wellf 'categorycheck))
+		 (setq wellf 'rowlistcheck)))
+	   (setq wellf 'rowlistcheck))
+	 (if (not (equal wellf t))
+	     (progn
+	       (message (concat "pxdisplay-mode: pxdisplay-sym not well formed ("
+				(symbol-name wellf) ")"))
+	       nil)
+	   t))))
 
 (defun pxdisplay-process-current (apiresult)
   "Extract current prices when REST API call returns & update symbol properties"
