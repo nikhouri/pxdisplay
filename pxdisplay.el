@@ -38,7 +38,7 @@
 	 (when (pxdisplay-validate-setup)
 	   (pxdisplay-initialize)
 	   ;; Fetch & process current prices
-	   (message "pxdisplay-mode: updating prices...")
+	   (message "pxdisplay: updating prices...")
 	   (pxdisplay-OANDA-REST pxdisplay-host
 				 pxdisplay-account
 				 "/pricing"
@@ -63,7 +63,7 @@
 				  (pxdisplay-update-prices 3)))))
 	((= step 3)
 	 ;; Update price display buffer
-	 (message "pxdisplay-mode: updating prices...done")
+	 (message "pxdisplay: updating prices...done")
 	 (pxdisplay-update-pxdisplay))))
 
 (defun pxdisplay-initialize ()
@@ -87,10 +87,10 @@
 (defun pxdisplay-validate-setup ()
   "Validate config in pxdisplay-* variables"
   (and (cond ((equal pxdisplay-account nil) ; Check if mandatory variables are defined
-	      (message "pxdisplay-mode: you must set an account in pxdisplay-account")
+	      (message "pxdisplay: you must set an account in pxdisplay-account")
 	      nil)
 	     ((equal pxdisplay-token nil)
-	      (message "pxdisplay-mode: you must set a token in pxdisplay-token")
+	      (message "pxdisplay: you must set a token in pxdisplay-token")
 	      nil)
 	     (t t))
        (let ((wellf t))  ; Check if pxdisplay-sym is valid
@@ -108,7 +108,7 @@
 	   (setq wellf 'rowlistcheck))
 	 (if (not (equal wellf t))
 	     (progn
-	       (message (concat "pxdisplay-mode: pxdisplay-sym not well formed ("
+	       (message (concat "pxdisplay: pxdisplay-sym not well formed ("
 				(symbol-name wellf) ")"))
 	       nil)
 	   t))))
