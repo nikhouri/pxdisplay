@@ -173,7 +173,8 @@
     (read-only-mode)
     (goto-char cpos)
     (setq inhibit-read-only nil))
-  (switch-to-buffer (get-buffer "*pxdisplay*")))
+  (if (not (get-buffer-window (get-buffer "*pxdisplay*")))
+      (switch-to-buffer (get-buffer "*pxdisplay*"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Major mode code
