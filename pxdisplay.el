@@ -135,11 +135,11 @@
   "Formatting pxdisplay arrowed percents"
   (if (or (floatp pct) (integerp pct))
       (cond
-       ((= pct 0) "- 0.0%")
-       ((> pct 0) (format "▲%+4.1f%%" (* 100 pct)))
-       ((< pct 0) (format "▼%+4.1f%%" (* 100 pct)))
-       "       ") ; Some other thing happened
-    "       ")) ; We weren't passed a number
+       ((= pct 0) "-0.0%")
+       ((> pct 0) (format "▲%+1.1f%%" (* 100.0 pct)))
+       ((< pct 0) (format "▼%+1.1f%%" (* 100.0 pct)))
+       "        ") ; Some other thing happened
+    "        ")) ; We weren't passed a number
 
 (defun pxdisplay-update-pxdisplay ()
   "Write out prices to a (new) *pxdisplay* buffer"
@@ -162,12 +162,15 @@
 		   (d (get fsym 'D))
 		   (w (get fsym 'W))
 		   (m (get fsym 'M))
-		   (ts (get fsym 'ts)))
+		   (ts (get fsym 'ts))
+		   (dpct (pxdisplay-pctformat (/ (- price d) d)))
+		   (wpct (pxdisplay-pctformat (/ (- price w) w)))
+		   (mpct (pxdisplay-pctformat (/ (- price m) m))))
 	      (princ (format "%-10s" sym) pxbuff)
 	      (princ (format "%11.4f" price) pxbuff)
-	      (princ (concat "  D:" (pxdisplay-pctformat (/ (- price d) d))) pxbuff)
-	      (princ (concat "  W:" (pxdisplay-pctformat (/ (- price w) w))) pxbuff)
-	      (princ (concat "  M:" (pxdisplay-pctformat (/ (- price m) m))) pxbuff)
+	      (princ (concat (make-string (- 9 (length dpct)) ? ) "D:" dpct) pxbuff)
+	      (princ (concat (make-string (- 9 (length wpct)) ? ) "W:" wpct) pxbuff)
+	      (princ (concat (make-string (- 9 (length mpct)) ? ) "M:" mpct) pxbuff)
 	      (princ (concat "  (" (substring ts 0 19) "Z)") pxbuff)
 	      (princ "\n" pxbuff)))))
     (read-only-mode)
