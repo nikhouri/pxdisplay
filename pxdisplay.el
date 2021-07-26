@@ -134,12 +134,18 @@
 (defun pxdisplay-pctformat (pct)
   "Formatting pxdisplay arrowed percents"
   (if (or (floatp pct) (integerp pct))
-      (cond
-       ((= pct 0) "-0.0%")
-       ((> pct 0) (format "▲%+1.1f%%" (* 100.0 pct)))
-       ((< pct 0) (format "▼%+1.1f%%" (* 100.0 pct)))
-       "        ") ; Some other thing happened
-    "        ")) ; We weren't passed a number
+      (let* ((fmtpct ; Adjust precision depending on value
+	     (cond
+	      ((< (abs pct) 0.1) (format "%+1.1f%%" (* 100.0 pct)))
+	      ((< (abs pct) 1) (format " %+1d%%" (* 100.0 pct)))
+	      ((>= (abs pct) 1) (format "%+1d%%" (* 100.0 pct)))
+	      "        "))) ; Some other thing happened
+	(cond ; Add arrows
+	 ((= pct 0) "• 0.0%")
+	 ((> pct 0) (concat "▲" fmtpct))
+	 ((< pct 0) (concat "▼" fmtpct))
+	 "        ")) ; Some other thing happened
+	"        ")) ; We weren't passed a number
 
 (defun pxdisplay-update-pxdisplay ()
   "Write out prices to a (new) *pxdisplay* buffer"
